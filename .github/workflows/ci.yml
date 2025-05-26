@@ -61,7 +61,9 @@ jobs:
             cmake \
             graphviz \
             bc \
-            ghdl
+            ghdl \
+            gcc-riscv64-unknown-elf
+          sudo apt-get remove -y llvm
 
       - name:
         run: |
@@ -104,3 +106,33 @@ jobs:
         run: |
           cd openasip
           ./tools/scripts/compiletest.sh -c
+
+##############################################
+      - name: Checkout QEMU OpenASIP
+        uses: actions/checkout@v4
+        with:
+          repository: cpc/qemu-openasip
+          path: qemu-openasip
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build QEMU OpenASIP
+        run: |
+          cd qemu-openasip
+          mkdir -p build
+          cd build
+          ../configure --target-list=riscv32-softmmu
+          make -j$(nproc)
+
+      - name: Run QEMU System test
+        run: |
+          export QEMU_PATH="${{ github.workspace }}/qemu-openasip/build"
+          export LIBOPENASIP="${{ github.workspace }}/local/lib/libopenasip.so"
+          cd openasip/test/base/osal/RISCVInstructionExecutorTest
+          python3 QEMUSystemtest.py
+          
+          if [ $? -eq 0 ]; then
+            echo "QEMU System test passed successfully!"
+          else
+            echo "QEMU System test failed!"
+            exit 1
+          fi
