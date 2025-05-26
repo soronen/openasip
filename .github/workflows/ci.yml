@@ -63,7 +63,8 @@ jobs:
             bc \
             ghdl \
             gcc-riscv64-unknown-elf
-          sudo apt-get remove -y llvm
+          sudo apt-get purge -y 'llvm-*' 'clang-*' 'libllvm-*' 'lld-*'
+          sudo apt-get install -y lld-17
 
       - name:
         run: |
