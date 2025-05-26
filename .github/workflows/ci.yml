@@ -64,9 +64,7 @@ jobs:
             ghdl \
             gcc-riscv64-unknown-elf
           sudo apt-get purge -y 'llvm-*' 'clang-*' 'libllvm-*' 'lld-*'
-          sudo apt-get install -y lld-17
-
-      - name:
+      - name: Create workspace directory
         run: |
           mkdir -p ${{ github.workspace }}/local
 
