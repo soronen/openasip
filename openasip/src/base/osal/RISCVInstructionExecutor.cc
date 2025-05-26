@@ -166,6 +166,17 @@ initializeMachine(const char* machinePath, char** error) {
 }
 
 /**
+ * Resets the customOps map loaded with initializeMachine and deletes the
+ * OperationPool.
+ */
+int
+resetMachine() {
+    RISCVInstructionExecutor::customOps = {};
+    RISCVInstructionExecutor::pool = nullptr;
+    return 0;
+}
+
+/**
  * Unpacks a RISC-V R4-type instruction and returns its string representation
  * if found from the machine file. Remember to call Initialize machine first.
  *

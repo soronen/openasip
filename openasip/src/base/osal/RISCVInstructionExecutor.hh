@@ -33,6 +33,8 @@ extern "C" {
 
 int initializeMachine(const char* machinePath, char** error);
 
+int resetMachine();
+
 int unpackInstruction(
     const uint32_t instruction, char** output, char** error);
 
