@@ -5,10 +5,10 @@ import shlex
 import time
 
 QEMU_PATH = os.environ.get("QEMU_PATH", os.path.expandvars("$HOME/qemu-openasip/build"))
-QEMU_PATH = "/home/eetu/projects/qemu/build"
+# QEMU_PATH = "/home/eetu/projects/qemu/build"
 LIBOPENASIP = os.environ.get("LIBOPENASIP", "libopenasip.so")
 TEST_ROOT = os.path.dirname(os.path.abspath(__file__))
-PROGRAM_PATH = os.path.join(TEST_ROOT, "data/crc")
+PROGRAM_PATH = os.path.join(TEST_ROOT, "crc")
 MACHINE_FILE = os.path.join(PROGRAM_PATH, "start.adf")
 PROGRAM_COMPILE_COMMAND = "riscv32-unknown-elf-gcc -T link.ld -nostdlib -o crc_program.elf start.S main.c crc.c"
 KERNEL = os.path.join(PROGRAM_PATH, "crc_program.elf")
