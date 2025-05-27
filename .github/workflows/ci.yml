@@ -126,7 +126,7 @@ jobs:
         run: |
           export QEMU_PATH="${{ github.workspace }}/qemu-openasip/build"
           export LIBOPENASIP="${{ github.workspace }}/local/lib/libopenasip.so"
-          cd openasip/test/base/osal/RISCVInstructionExecutorTest
+          cd testsuite/systemtest_long/qemu
           python3 QEMUSystemtest.py
           
           if [ $? -eq 0 ]; then
