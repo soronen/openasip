@@ -63,6 +63,7 @@ jobs:
             bc \
             ghdl \
             gcc-riscv64-unknown-elf
+
           sudo apt-get purge -y 'llvm-*' 'clang-*' 'libllvm-*' 'lld-*'
       - name: Create workspace directory
         run: |
@@ -106,7 +107,6 @@ jobs:
           cd openasip
           ./tools/scripts/compiletest.sh -c
 
-##############################################
       - name: Checkout QEMU OpenASIP
         uses: actions/checkout@v4
         with:
