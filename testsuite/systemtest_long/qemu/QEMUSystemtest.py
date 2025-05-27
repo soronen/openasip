@@ -5,13 +5,13 @@ import shlex
 import time
 
 QEMU_PATH = os.environ.get("QEMU_PATH", os.path.expandvars("$HOME/qemu-openasip/build"))
-LIBOPENASIP = os.environ.get("LIBOPENASIP", "libopenasip.so")
-TEST_ROOT = os.path.dirname(os.path.abspath(__file__))
+# LIBOPENASIP = os.environ.get("LIBOPENASIP", "libopenasip.so")
+TEST_ROOT = os.environ.get("QEMU_TEST_ROOT", os.path.dirname(os.path.abspath(__file__)))
 PROGRAM_PATH = os.path.join(TEST_ROOT, "crc")
 MACHINE_FILE = os.path.join(PROGRAM_PATH, "start.adf")
 PROGRAM_COMPILE_COMMAND = "riscv64-unknown-elf-gcc -T link.ld -nostdlib -march=rv32imac -mabi=ilp32 -o crc_program.elf start.S main.c crc.c"
 KERNEL = os.path.join(PROGRAM_PATH, "crc_program.elf")
-OUTPUT_FILE = os.path.join(PROGRAM_PATH, "output.txt")
+OUTPUT_FILE = os.path.join(PROGRAM_PATH, "qemu_test_result.txt")
 EXPECTED_RESULT = """CHECK_VALUE: 0x62488E82
 Slow CRC: 0x62488E82
 Fast CRC: 0x62488E82
@@ -46,12 +46,12 @@ def run_qemu():
     qemu_executable = os.path.join(QEMU_PATH, "qemu-system-riscv32")
     
     print(f"Using QEMU: {qemu_executable}")
-    print(f"Using OpenASIP library: {LIBOPENASIP}")
+    # print(f"Using OpenASIP library: {LIBOPENASIP}")
     print(f"Using OpenASIP machine: {MACHINE_FILE}")
     print(f"Using kernel: {KERNEL}")
     
     qemu_cmd = f"{qemu_executable} " \
-               f"-machine virt,openasip_machine_path={MACHINE_FILE},libopenasip_path={LIBOPENASIP} " \
+               f"-machine virt,openasip_machine_path={MACHINE_FILE} " \
                f"-bios none " \
                f"-serial file:{OUTPUT_FILE} " \
                f"-nographic " \

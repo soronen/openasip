@@ -1,18 +1,20 @@
 #include "crc.h"
-#include <stdint.h>
 
 #define UART_BASE 0x10000000
 volatile char* const UART0 = (char*)UART_BASE;
 
-void uart_putc(char c) {
+void
+uart_putc(char c) {
     *UART0 = c;
 }
 
-void uart_puts(const char* s) {
+void
+uart_puts(const char* s) {
     while (*s) uart_putc(*s++);
 }
 
-void u32_to_hex(uint32_t val, char *buf) {
+void
+u32_to_hex(unsigned int val, char* buf) {
     static const char hex_chars[] = "0123456789ABCDEF";
     buf[0] = '0';
     buf[1] = 'x';
@@ -26,7 +28,8 @@ void u32_to_hex(uint32_t val, char *buf) {
 unsigned char test[] = "TCE rocks!";
 #define LENGTH 10
 
-int main(void) {
+int
+main(void) {
     char buf[12];
 
     uart_puts("CHECK_VALUE: ");
@@ -46,6 +49,7 @@ int main(void) {
     u32_to_hex(fastcrc, buf);
     uart_puts(buf);
     uart_puts("\r\n");
-    while(1);
+    while (1)
+        ;
     return 0;
 }

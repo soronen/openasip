@@ -3,5 +3,5 @@
 $test_description="QEMU-openasip custom instructions extension test.";
 
 // the binary being tested
-$test_bin="./QEMUSystemtest.py";
+$test_bin="./qemu-openasip-systest.sh";
 ?>
