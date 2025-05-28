@@ -4,9 +4,9 @@ import subprocess
 import shlex
 import time
 import shutil
+import multiprocessing
 
 QEMU_PATH = os.environ.get("QEMU_PATH", os.path.expandvars("$HOME/qemu-openasip/build"))
-LIBOPENASIP = os.environ.get("LIBOPENASIP", "libopenasip.so")
 TEST_ROOT = os.path.dirname(os.path.abspath(__file__))
 PROGRAM_PATH = os.path.join(TEST_ROOT, "crc")
 MACHINE_FILE = os.path.join(PROGRAM_PATH, "start.adf")
@@ -17,6 +17,110 @@ EXPECTED_RESULT = """CHECK_VALUE: 0x62488E82
 Slow CRC: 0x62488E82
 Fast CRC: 0x62488E82
 """
+
+def clone_qemu_openasip():
+    qemu_dir = os.path.expandvars("$HOME/qemu-openasip")
+    
+    if os.path.exists(qemu_dir):
+        print(f"QEMU OpenASIP directory already exists at {qemu_dir}")
+        print("Updating repository with git pull...")
+        
+        original_dir = os.getcwd()
+        try:
+            os.chdir(qemu_dir)
+            result = subprocess.run(
+                ["git", "pull"],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            print(f"Git pull result: {result.stdout.strip()}")
+            return True
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to update repository: {e}")
+            print(f"stdout: {e.stdout}")
+            print(f"stderr: {e.stderr}")
+            return False
+        except Exception as e:
+            print(f"Error updating repository: {e}")
+            return False
+        finally:
+            os.chdir(original_dir)
+    
+    try:
+        print("Cloning QEMU OpenASIP repository...")
+        result = subprocess.run(
+            ["git", "clone", "https://github.com/cpc/qemu-openasip.git", qemu_dir],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        print("Repository cloned successfully")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to clone repository: {e}")
+        print(f"stdout: {e.stdout}")
+        print(f"stderr: {e.stderr}")
+        return False
+    except Exception as e:
+        print(f"Error in clone_qemu_openasip: {e}")
+        return False
+
+def build_qemu():
+    qemu_dir = os.path.expandvars("$HOME/qemu-openasip")
+    qemu_executable = os.path.join(QEMU_PATH, "qemu-system-riscv32")
+    
+    if not os.path.exists(qemu_dir):
+        print(f"QEMU OpenASIP directory not found at {qemu_dir}")
+        return False
+    
+    # Skip build if executable already exists
+    if os.path.exists(qemu_executable):
+        print(f"QEMU executable already exists at {qemu_executable}, skipping build")
+        return True
+    
+    original_dir = os.getcwd()
+    try:
+        os.chdir(qemu_dir)
+        print(f"Building QEMU OpenASIP in {os.getcwd()}")
+        
+        # Configure QEMU
+        configure_cmd = "./configure --target-list=riscv32-softmmu"
+        print(f"Running: {configure_cmd}")
+        result = subprocess.run(
+            shlex.split(configure_cmd),
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        
+        # Build QEMU with parallel jobs
+        num_cpus = multiprocessing.cpu_count()
+        make_cmd = f"make -j{num_cpus}"
+        print(f"Running: {make_cmd}")
+        result = subprocess.run(
+            shlex.split(make_cmd),
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        
+        print("QEMU OpenASIP built successfully")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to build QEMU OpenASIP: {e}")
+        print(f"stdout: {e.stdout}")
+        print(f"stderr: {e.stderr}")
+        return False
+    except Exception as e:
+        print(f"Error in build_qemu: {e}")
+        return False
+    finally:
+        os.chdir(original_dir)
 
 def compile_custom_ops():
     original_dir = os.getcwd()
@@ -87,12 +191,11 @@ def run_qemu():
     qemu_executable = os.path.join(QEMU_PATH, "qemu-system-riscv32")
     
     print(f"Using QEMU: {qemu_executable}")
-    print(f"Using OpenASIP library: {LIBOPENASIP}")
     print(f"Using OpenASIP machine: {MACHINE_FILE}")
     print(f"Using kernel: {KERNEL}")
     
     qemu_cmd = f"{qemu_executable} " \
-               f"-machine virt,openasip_machine_path={MACHINE_FILE},libopenasip_path=/home/eetu/projects/openasip/openasip/src/.libs/libopenasip.so " \
+               f"-machine virt,openasip_machine_path={MACHINE_FILE} " \
                f"-bios none " \
                f"-serial file:{OUTPUT_FILE} " \
                f"-nographic " \
@@ -156,6 +259,10 @@ def compare_output():
         return False
 
 def run_test():
+    if not clone_qemu_openasip():
+        return False
+    if not build_qemu():
+        return False
     if not compile_custom_ops():
         return False
     if not compile_program():
