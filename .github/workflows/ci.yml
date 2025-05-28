@@ -61,9 +61,13 @@ jobs:
             cmake \
             graphviz \
             bc \
-            ghdl
+            ghdl \
+            libglib2.0-dev libfdt-dev libpixman-1-dev zlib1g-dev ninja-build \
+            gcc-riscv64-unknown-elf
 
-      - name:
+          sudo apt-get purge -y 'llvm-*' 'clang-*' 'libllvm-*' 'lld-*'
+          
+      - name: Create workspace directory
         run: |
           mkdir -p ${{ github.workspace }}/local
 
