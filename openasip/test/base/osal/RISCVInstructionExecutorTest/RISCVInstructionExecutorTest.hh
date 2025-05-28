@@ -245,9 +245,12 @@ InstructionExecutorTest::testExecuteInstruction32Negative() {
     TS_ASSERT_EQUALS(status, -1);
     TS_ASSERT_DIFFERS(error, nullptr);
     errorStr = error;
-    expectedError = "ExecuteInstruction error: unknown operation";
+    expectedError =
+        "ExecuteInstruction error: No behavior implementation found for "
+        "operation \'unknown instruction\'";
     TSM_ASSERT(
-        "Error message should contain: " + expectedError,
+        "Error message should contain: " + expectedError +
+            "\n Actual message: " + errorStr,
         errorStr.find(expectedError) != std::string::npos);
 
     error = nullptr;
@@ -257,7 +260,8 @@ InstructionExecutorTest::testExecuteInstruction32Negative() {
     errorStr = error;
     expectedError = "ExecuteInstruction error: Not enough input values";
     TSM_ASSERT(
-        "Error message should contain: " + expectedError,
+        "Error message should contain: " + expectedError +
+            "\n Actual message: " + errorStr,
         errorStr.find(expectedError) != std::string::npos);
 
     error = nullptr;
@@ -267,7 +271,8 @@ InstructionExecutorTest::testExecuteInstruction32Negative() {
     errorStr = error;
     expectedError = "ExecuteInstruction error: Not enough input values";
     TSM_ASSERT(
-        "Error message should contain: " + expectedError,
+        "Error message should contain: " + expectedError +
+            "\n Actual message: " + errorStr,
         errorStr.find(expectedError) != std::string::npos);
 
     error = nullptr;
@@ -277,7 +282,8 @@ InstructionExecutorTest::testExecuteInstruction32Negative() {
     errorStr = error;
     expectedError = "error: Output parameter is null";
     TSM_ASSERT(
-        "Error message should contain: " + expectedError,
+        "Error message should contain: " + expectedError +
+            "\n Actual message: " + errorStr,
         errorStr.find(expectedError) != std::string::npos);
 
     if (error) {
@@ -332,9 +338,12 @@ InstructionExecutorTest::testExecuteInstruction64Negative() {
     TS_ASSERT_EQUALS(status, -1);
     TS_ASSERT_DIFFERS(error, nullptr);
     errorStr = error;
-    expectedError = "ExecuteInstruction error: unknown operation";
+    expectedError =
+        "ExecuteInstruction error: No behavior implementation found for "
+        "operation \'unknown instruction\'";
     TSM_ASSERT(
-        "Error message should contain: " + expectedError,
+        "Error message should contain: " + expectedError +
+            "\n Actual message: " + errorStr,
         errorStr.find(expectedError) != std::string::npos);
 
     error = nullptr;
@@ -344,7 +353,8 @@ InstructionExecutorTest::testExecuteInstruction64Negative() {
     errorStr = error;
     expectedError = "ExecuteInstruction error: Not enough input values";
     TSM_ASSERT(
-        "Error message should contain: " + expectedError,
+        "Error message should contain: " + expectedError +
+            "\n Actual message: " + errorStr,
         errorStr.find(expectedError) != std::string::npos);
 
     error = nullptr;
@@ -354,7 +364,8 @@ InstructionExecutorTest::testExecuteInstruction64Negative() {
     errorStr = error;
     expectedError = "ExecuteInstruction error: Not enough input values";
     TSM_ASSERT(
-        "Error message should contain: " + expectedError,
+        "Error message should contain: " + expectedError +
+            "\n Actual message: " + errorStr,
         errorStr.find(expectedError) != std::string::npos);
 
     error = nullptr;
@@ -364,7 +375,8 @@ InstructionExecutorTest::testExecuteInstruction64Negative() {
     errorStr = error;
     expectedError = "error: Output parameter is null";
     TSM_ASSERT(
-        "Error message should contain: " + expectedError,
+        "Error message should contain: " + expectedError +
+            "\n Actual message: " + errorStr,
         errorStr.find(expectedError) != std::string::npos);
 
     if (error) {

@@ -269,32 +269,53 @@ PluginTools::unregisterAllModules() {
  */
 void*
 PluginTools::loadSym(const std::string& symbolName, const std::string& module) {
+    // Open log file for appending, fallback to stderr if failed
+    FILE* log = fopen("/tmp/openasip.log", "a");
+    if (log == NULL) {
+        log = stderr;
+    }
+
+    fprintf(
+        log, "loadSym called: symbolName=%s, module=%s\n", symbolName.c_str(),
+        module.c_str());
+
     string path = module;
     if (module != "") {
+        fprintf(log, "Looking for specific module: %s\n", module.c_str());
 
         if (!FileSystem::isAbsolutePath(module)) {
+            fprintf(log, "Module path is not absolute, trying to find it\n");
             try {
                 path = findModule(module);
+                fprintf(log, "Found module at path: %s\n", path.c_str());
             } catch (const FileNotFound& f) {
+                fprintf(
+                    log, "Module not found, trying to register it first\n");
                 // file was not found, so let's try to register it.
                 registerModule(module);
                 path = findModule(module);
+                fprintf(
+                    log, "After registration, found at: %s\n", path.c_str());
             }
         } else {
             if (!MapTools::containsKey(modules_, path)) {
+                fprintf(log, "Module not yet registered, registering now\n");
                 registerModule(path);
             }
         }
 
         MapIter mt = modules_.find(path);
         void* handle = (*mt).second;
+        fprintf(log, "Got module handle for %s\n", path.c_str());
         const char* error = NULL;
 
         // clear possible old errors
         dlerror();
 
+        fprintf(log, "Loading symbol: %s\n", symbolName.c_str());
         void* sym = dlsym(handle, symbolName.c_str());
         if ((error = dlerror()) != NULL) {
+            fprintf(log, "Error loading symbol: %s\n", error);
             if (sym == NULL) {
                 // it does not seem to be possible to separate the
                 // symbol not found error from other errors, thus this will 
@@ -302,35 +323,57 @@ PluginTools::loadSym(const std::string& symbolName, const std::string& module) {
                 // could not be loaded for any reason
                 string message = "Symbol not found: ";
                 message += symbolName;
+                fprintf(log, "%s\n", message.c_str());
+                if (log != stderr) fclose(log);
                 throw SymbolNotFound(__FILE__, __LINE__, __func__, message);
             } else {
+                fprintf(log, "dlsym error but sym not NULL: %s\n", error);
+                if (log != stderr) fclose(log);
                 throw DynamicLibraryException(
                     __FILE__, __LINE__, __func__, error);
             }
         }
 
+        fprintf(
+            log, "Successfully loaded symbol %s from %s\n",
+            symbolName.c_str(), path.c_str());
+        if (log != stderr) fclose(log);
         return sym;
 
     } else {
+        fprintf(log, "No specific module provided, searching all modules\n");
 
         // seek all registered modules for the symbol and return the first
         // one found
         for (MapIter mt = modules_.begin(); mt != modules_.end(); mt++) {
+            string currentPath = (*mt).first;
+            fprintf(log, "Trying module: %s\n", currentPath.c_str());
             void* handle = (*mt).second;
             const char* error = NULL;
             dlerror();
             void* sym = dlsym(handle, symbolName.c_str());
             if ((error = dlerror()) == NULL) {
+                fprintf(
+                    log, "Successfully loaded symbol %s from %s\n",
+                    symbolName.c_str(), currentPath.c_str());
+                if (log != stderr) fclose(log);
                 return sym;
+            } else {
+                fprintf(log, "Symbol not found in this module: %s\n", error);
             }
         }
 
         // symbol was not found, exception is thrown
+        fprintf(
+            log, "Symbol %s not found in any module\n", symbolName.c_str());
         string method = "PluginTools::loadSym()";
         string message = "Symbol not found";
+        if (log != stderr) fclose(log);
         throw SymbolNotFound(__FILE__, __LINE__, method, message);
     }
 
+    fprintf(log, "Unexpected code path reached in loadSym\n");
+    if (log != stderr) fclose(log);
     return NULL;
 }
 

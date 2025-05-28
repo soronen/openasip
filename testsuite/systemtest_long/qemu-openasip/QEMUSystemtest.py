@@ -8,11 +8,11 @@ import multiprocessing
 
 QEMU_PATH = os.environ.get("QEMU_PATH", os.path.expandvars("$HOME/qemu-openasip/build"))
 TEST_ROOT = os.path.dirname(os.path.abspath(__file__))
-PROGRAM_PATH = os.path.join(TEST_ROOT, "crc")
-MACHINE_FILE = os.path.join(PROGRAM_PATH, "start.adf")
+DATA_PATH = os.path.join(TEST_ROOT, "data")
+MACHINE_FILE = os.path.join(DATA_PATH, "start.adf")
 PROGRAM_COMPILE_COMMAND = "riscv64-unknown-elf-gcc -T link.ld -nostdlib -march=rv32imac -mabi=ilp32 -o crc_program.elf start.S main.c crc.c -g"
-KERNEL = os.path.join(PROGRAM_PATH, "crc_program.elf")
-OUTPUT_FILE = os.path.join(PROGRAM_PATH, "qemu_test_result.txt")
+KERNEL = os.path.join(DATA_PATH, "crc_program.elf")
+OUTPUT_FILE = os.path.join(DATA_PATH, "qemu_test_result.txt")
 EXPECTED_RESULT = """CHECK_VALUE: 0x62488E82
 Slow CRC: 0x62488E82
 Fast CRC: 0x62488E82
@@ -166,7 +166,7 @@ def compile_custom_ops():
 def compile_program():
     original_dir = os.getcwd()
     try:
-        os.chdir(PROGRAM_PATH)
+        os.chdir(DATA_PATH)
         print(f"Compiling in {os.getcwd()}")
         
         result = subprocess.run(

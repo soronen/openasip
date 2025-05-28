@@ -89,40 +89,83 @@ OperationBehaviorLoader::~OperationBehaviorLoader() {
  */
 OperationBehavior&
 OperationBehaviorLoader::importBehavior(const Operation& parent) {
+    // Open log file for appending, fallback to stderr if failed
+    FILE* log = fopen("/tmp/openasip_importBehavior.log", "a");
+    if (log == NULL) {
+        log = stderr;
+    }
+
     string name = parent.name();
+    fprintf(log, "importBehavior called for operation: %s\n", name.c_str());
+
     // if behavior was already created, use it
     BehaviorMap::iterator iter = behaviors_.find(name);
     if (iter != behaviors_.end()) {
+        fprintf(
+            log, "Found existing behavior for %s, reusing\n", name.c_str());
+        if (log != stderr) fclose(log);
         return *((*iter).second);
     }
     
     try {
+        fprintf(log, "Finding module for operation: %s\n", name.c_str());
         OperationModule& module = index_.moduleOf(name);
         if (&module == &NullOperationModule::instance()) {
             string msg = "Module for operation " + name + " not found";
+            fprintf(log, "ERROR: %s\n", msg.c_str());
+            if (log != stderr) fclose(log);
             throw InstanceNotFound(__FILE__, __LINE__, __func__, msg);
         }
        
         string creatorName = CREATE_FUNC + StringTools::stringToUpper(name);
         string destructorName = DELETE_FUNC + StringTools::stringToUpper(name);
         string modName = module.behaviorModule();
+
+        fprintf(
+            log, "Looking for creator %s and destructor %s in module %s\n",
+            creatorName.c_str(), destructorName.c_str(), modName.c_str());
+
         OperationBehavior* (*behaviorCreator)(const Operation&);
         void (*behaviorDestructor)(OperationBehavior*);
+
+        fprintf(log, "Importing symbol: %s\n", creatorName.c_str());
         tools_.importSymbol(creatorName, behaviorCreator, modName);
+
+        fprintf(log, "Importing symbol: %s\n", destructorName.c_str());
         tools_.importSymbol(destructorName, behaviorDestructor, modName);
+
+        fprintf(
+            log, "Creating behavior for %s using imported creator\n",
+            name.c_str());
         OperationBehavior* behavior = behaviorCreator(parent);
+
+        fprintf(log, "Storing behavior and destructor in maps\n");
         behaviors_[name] = behavior;
         destructors_[behavior] = behaviorDestructor;
+
+        fprintf(log, "Successfully imported behavior for %s\n", name.c_str());
+        if (log != stderr) fclose(log);
         return *behavior;
     
     } catch (const FileNotFound& e) {
+        fprintf(
+            log, "ERROR: FileNotFound exception: %s\n",
+            e.errorMessage().c_str());
+        if (log != stderr) fclose(log);
         throw e;
     } catch (const SymbolNotFound& e) {
+        fprintf(
+            log, "ERROR: SymbolNotFound exception: %s\n",
+            e.errorMessage().c_str());
+        if (log != stderr) fclose(log);
         throw e;
     } catch (const Exception& e) {
-        string msg = 
-            std::string("Behavior definition for ") + parent.name() + 
-            " could not be loaded.";        
+        fprintf(
+            log, "ERROR: Exception caught: %s\n", e.errorMessage().c_str());
+        string msg = std::string("Behavior definition for ") + parent.name() +
+                     " could not be loaded.";
+        fprintf(log, "Creating new exception: %s\n", msg.c_str());
+        if (log != stderr) fclose(log);
         DynamicLibraryException error(__FILE__, __LINE__, __func__, msg);
         error.setCause(e);
         throw error;

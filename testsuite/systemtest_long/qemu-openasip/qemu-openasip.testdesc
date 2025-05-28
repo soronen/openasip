@@ -4,4 +4,6 @@ $test_description="QEMU-openasip custom instructions extension test.";
 
 // the binary being tested
 $test_bin="./QEMUSystemtest.py";
+
+$xstdout="Test PASSED: Output matches expected result\n";
 ?>

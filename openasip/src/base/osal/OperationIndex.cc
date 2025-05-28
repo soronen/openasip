@@ -271,8 +271,23 @@ OperationIndex::removeModule(
 void
 OperationIndex::refreshModule(
     const std::string& path, const std::string& modName) {
+    // Open log file for appending, fallback to stderr if failed
+    FILE* log = fopen("/tmp/openasip.log", "a");
+    if (log == NULL) {
+        log = stderr;
+    }
+
+    fprintf(
+        log, "refreshModule called: path=%s, modName=%s\n", path.c_str(),
+        modName.c_str());
+
     ModuleTable::iterator modIter = modulesInPath_.find(path);
     if (modIter == modulesInPath_.end()) {
+        fprintf(
+            log, "ERROR: Path %s not found in modulesInPath_\n",
+            path.c_str());
+        if (log != stderr) fclose(log);
+
         string msg = "Path for the module not found.";
         throw PathNotFound(__FILE__, __LINE__, __func__, msg, path);
     }
@@ -280,27 +295,48 @@ OperationIndex::refreshModule(
     vector<OperationModule*>::iterator iter = (*modIter).second.begin();
     OperationModule* module = NULL;
     while (iter != (*modIter).second.end()) {
+        fprintf(log, "Checking module: %s\n", (*iter)->name().c_str());
         if ((*iter)->name() == modName) {
             module = (*iter);
+            fprintf(
+                log, "Found matching module: %s\n", module->name().c_str());
             break;
         }
         iter++;
     }
 
     if (module == NULL) {
-	throw InstanceNotFound(
-	    __FILE__, __LINE__, __func__, 
-	    "Operation module " + path + ":" + modName + " not found.");
+        fprintf(
+            log, "ERROR: Module %s not found in path %s\n", modName.c_str(),
+            path.c_str());
+        if (log != stderr) fclose(log);
+
+        throw InstanceNotFound(
+            __FILE__, __LINE__, __func__,
+            "Operation module " + path + ":" + modName + " not found.");
     }
 
     DefinitionTable::iterator it = 
         opDefinitions_.find(module->propertiesModule());
     if (it == opDefinitions_.end()) {
+        fprintf(
+            log, "No definition found for module %s in propertiesModule %s\n",
+            modName.c_str(), module->propertiesModule().c_str());
+        if (log != stderr) fclose(log);
+
         return;
     } else {
+        fprintf(
+            log, "Deleting and erasing definition for module %s\n",
+            modName.c_str());
         delete (*it).second;
         opDefinitions_.erase(it);
     }
+
+    fprintf(
+        log, "refreshModule completed for %s:%s\n", path.c_str(),
+        modName.c_str());
+    if (log != stderr) fclose(log);
 }
 
 /**
@@ -313,14 +349,32 @@ OperationIndex::refreshModule(
  */
 OperationModule&
 OperationIndex::moduleOf(const std::string& name) {
-    
+    // Open log file for appending, fallback to stderr if failed
+    FILE* log = fopen("/tmp/openasip_OperationIndex::moduleOf.log", "a");
+    if (log == NULL) {
+        log = stderr;
+    }
+
+    fprintf(log, "moduleOf called for operation: %s\n", name.c_str());
+
     // let's iterate through every module to search an operation
     for (unsigned int i = 0; i < paths_.size(); i++) {
+        fprintf(log, "Searching in path[%u]: %s\n", i, paths_[i].c_str());
         OperationModule& module = moduleOf(paths_[i], name);
         if (&module != &NullOperationModule::instance()) {
+            fprintf(
+                log, "Found module for operation %s in path %s: %s\n",
+                name.c_str(), paths_[i].c_str(), module.name().c_str());
+            if (log != stderr) fclose(log);
             return module;
         }
     }
+
+    fprintf(
+        log,
+        "No module found for operation: %s, returning NullOperationModule\n",
+        name.c_str());
+    if (log != stderr) fclose(log);
     return NullOperationModule::instance();
 }
 

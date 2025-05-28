@@ -61,9 +61,11 @@ executeInstructionHelper(
 
     Operation& op = RISCVInstructionExecutor::pool->operation(opName);
     if (&op == &NullOperation::instance()) {
-        throw std::invalid_argument(
-            std::string("ExecuteInstruction error: unknown operation '") +
-            opName + "'");
+        THROW_EXCEPTION(
+            IllegalOperationBehavior,
+            std::string("ExecuteInstruction error: No behavior "
+                        "implementation found for operation '") +
+                opName + "'");
     }
     OperationBehavior& behavior = op.behavior();
 
@@ -79,7 +81,8 @@ executeInstructionHelper(
 
     if (inputsCount < op.numberOfInputs()) {
         behavior.deleteState(opContext);
-        throw std::invalid_argument(
+        THROW_EXCEPTION(
+            IllegalParameters,
             std::string("ExecuteInstruction error: Not enough input values"));
     }
 
@@ -103,8 +106,10 @@ executeInstructionHelper(
 
     if (!behavior.simulateTrigger(simValPtrs.data(), opContext)) {
         behavior.deleteState(opContext);
-        throw std::runtime_error(std::string(
-            "ExecuteInstruction error: operation execution failed"));
+        THROW_EXCEPTION(
+            ModuleRunTimeError,
+            std::string(
+                "ExecuteInstruction error: operation execution failed"));
     }
 
     std::vector<SimValue> results(opOutputs);
