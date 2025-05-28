@@ -1,0 +1,14 @@
+<?php
+// short test description
+$test_description="QEMU-openasip custom instructions extension test.";
+
+// the binary being tested
+$test_bin="./qemu-openasip.sh";
+
+// Explicitly disable stdout/stderr verification
+$verify_stdout=false;
+$verify_stderr=false;
+
+// Only check the exit code
+$verify_retval=true;
+?>

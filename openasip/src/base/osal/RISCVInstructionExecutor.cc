@@ -288,9 +288,9 @@ executeInstruction32(
             output[i] = results.at(i).uIntWordValue();
         }
         return 0;
-    } catch (const std::exception& e) {
+    } catch (Exception& e) {
         if (error != nullptr) {
-            *error = strdup(e.what());
+            *error = strdup(e.errorMessage().c_str());
         }
         return -1;
     }
@@ -331,9 +331,9 @@ executeInstruction64(
             output[i] = results.at(i).uLongWordValue();
         }
         return 0;
-    } catch (const std::exception& e) {
+    } catch (Exception& e) {
         if (error != nullptr) {
-            *error = strdup(e.what());
+            *error = strdup(e.errorMessage().c_str());
         }
         return -1;
     }

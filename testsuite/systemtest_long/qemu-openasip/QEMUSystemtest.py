@@ -3,13 +3,14 @@ import os
 import subprocess
 import shlex
 import time
+import shutil
 
 QEMU_PATH = os.environ.get("QEMU_PATH", os.path.expandvars("$HOME/qemu-openasip/build"))
-# LIBOPENASIP = os.environ.get("LIBOPENASIP", "libopenasip.so")
-TEST_ROOT = os.environ.get("QEMU_TEST_ROOT", os.path.dirname(os.path.abspath(__file__)))
+LIBOPENASIP = os.environ.get("LIBOPENASIP", "libopenasip.so")
+TEST_ROOT = os.path.dirname(os.path.abspath(__file__))
 PROGRAM_PATH = os.path.join(TEST_ROOT, "crc")
 MACHINE_FILE = os.path.join(PROGRAM_PATH, "start.adf")
-PROGRAM_COMPILE_COMMAND = "riscv64-unknown-elf-gcc -T link.ld -nostdlib -march=rv32imac -mabi=ilp32 -o crc_program.elf start.S main.c crc.c"
+PROGRAM_COMPILE_COMMAND = "riscv64-unknown-elf-gcc -T link.ld -nostdlib -march=rv32imac -mabi=ilp32 -o crc_program.elf start.S main.c crc.c -g"
 KERNEL = os.path.join(PROGRAM_PATH, "crc_program.elf")
 OUTPUT_FILE = os.path.join(PROGRAM_PATH, "qemu_test_result.txt")
 EXPECTED_RESULT = """CHECK_VALUE: 0x62488E82
@@ -17,6 +18,46 @@ Slow CRC: 0x62488E82
 Fast CRC: 0x62488E82
 """
 
+def compile_custom_ops():
+    original_dir = os.getcwd()
+    try:
+        os.chdir(os.path.join(TEST_ROOT, "data"))
+        print(f"Building custom ops in {os.getcwd()}")
+        
+        result = subprocess.run(
+            ["buildopset", "riscv_tutorial"],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        print("Custom op building successful")
+        
+        target_dir = os.path.expandvars("$HOME/.openasip/opset/data")                
+        os.makedirs(target_dir, exist_ok=True)
+        
+        for item in os.listdir('.'):
+            src = os.path.join(os.getcwd(), item)
+            dst = os.path.join(target_dir, item)
+            if os.path.isdir(src):
+                if os.path.exists(dst):
+                    shutil.rmtree(dst)
+                shutil.copytree(src, dst)
+            else:
+                shutil.copy2(src, dst)
+        
+        print("Custom ops installed successfully")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Building custom ops failed: {e}")
+        print(f"stdout: {e.stdout}")
+        print(f"stderr: {e.stderr}")
+        return False
+    except Exception as e:
+        print(f"Error in compile_custom_ops: {e}")
+        return False
+    finally:
+        os.chdir(original_dir)
 
 def compile_program():
     original_dir = os.getcwd()
@@ -46,12 +87,12 @@ def run_qemu():
     qemu_executable = os.path.join(QEMU_PATH, "qemu-system-riscv32")
     
     print(f"Using QEMU: {qemu_executable}")
-    # print(f"Using OpenASIP library: {LIBOPENASIP}")
+    print(f"Using OpenASIP library: {LIBOPENASIP}")
     print(f"Using OpenASIP machine: {MACHINE_FILE}")
     print(f"Using kernel: {KERNEL}")
     
     qemu_cmd = f"{qemu_executable} " \
-               f"-machine virt,openasip_machine_path={MACHINE_FILE} " \
+               f"-machine virt,openasip_machine_path={MACHINE_FILE},libopenasip_path=/home/eetu/projects/openasip/openasip/src/.libs/libopenasip.so " \
                f"-bios none " \
                f"-serial file:{OUTPUT_FILE} " \
                f"-nographic " \
@@ -71,7 +112,7 @@ def run_qemu():
         )
         
         start_time = time.time()
-        timeout = 60
+        timeout = 5
         
         while time.time() - start_time < timeout:
             if os.path.exists(OUTPUT_FILE):
@@ -86,7 +127,7 @@ def run_qemu():
         
         print(f"Timeout after {timeout} seconds - terminating QEMU")
         process.terminate()
-        process.wait(timeout=2)
+        process.wait(timeout=2)    
         return False
         
     except Exception as e:
@@ -115,10 +156,11 @@ def compare_output():
         return False
 
 def run_test():
+    if not compile_custom_ops():
+        return False
     if not compile_program():
         return False
-    if not run_qemu():
-        return False
+    run_qemu()
     return compare_output()
 
 if __name__ == "__main__":
