@@ -26,6 +26,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "BEMGenerator.hh"
 #include "BinaryEncoding.hh"
@@ -132,6 +133,7 @@ extern "C" {
 
 /**
  * Initializes the Machine object and creates the custom_ops map and OperationPool object.
+ * 
  * Should be called before other functions. 
  *
  * @param machinePath path to the .adf machine file.
@@ -176,7 +178,9 @@ initializeMachine(const char* machinePath, char** error) {
 }
 
 /**
- * Resets the customOps map loaded with initializeMachine and deletes the
+ * Resets the machine to uninitialized state. 
+ * 
+ * Deletes the customOps map loaded and deletes the
  * OperationPool instruction cache.
  */
 int
