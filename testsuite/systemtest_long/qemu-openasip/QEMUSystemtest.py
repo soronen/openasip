@@ -156,7 +156,7 @@ def compile_program():
 def run_qemu():
     qemu_executable = os.path.join(QEMU_PATH, "qemu-system-riscv32")
     qemu_cmd = f"{qemu_executable} " \
-               f"-machine virt,openasip_machine_path={MACHINE_FILE} " \
+               f"-machine virt,oasip_machine={MACHINE_FILE} " \
                f"-bios none " \
                f"-serial file:{OUTPUT_FILE} " \
                f"-nographic " \

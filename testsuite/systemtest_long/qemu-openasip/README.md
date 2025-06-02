@@ -31,13 +31,13 @@ asm volatile(".insn r 0x0B, 0x01, 0x00, %0, %1, x0"
 # you can get the bit representation of a custom instruction with $ riscv-tdgen -a /path/to/machine.adf -o out.txt
 ```
 
-5. Run QEMU RISC-V virt machine with the added **openasip_machine_path** parameter, which should point to the .adf machine file. Rest of the parameters are given normally.
+5. Run QEMU RISC-V virt machine with the added **oasip_machine** parameter, which should point to the .adf machine file. Rest of the parameters are given normally.
 
 ```bash
 OPENASIP_MACHINE=/path/to/machine.adf
 KERNEL=/path/to/program.elf
 ./build/qemu-system-riscv32 \
-  -machine virt,openasip_machine_path=$OPENASIP_MACHINE \
+  -machine virt,oasip_machine=$OPENASIP_MACHINE \
   -bios none \
   -nographic \
   -no-reboot \
