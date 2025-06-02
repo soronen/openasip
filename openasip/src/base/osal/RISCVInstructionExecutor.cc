@@ -45,16 +45,21 @@ std::map<std::string, int> customOps = {};
 std::unique_ptr<OperationPool> pool = nullptr;
 
 /**
+ * Helper function that executes an OSAL instruction.
+ * 
  * Takes in the opName, instruction width, and the inputs, and returns the
  * output vector.
- *
- * Helper function to the extern C functions, and therefore not shown in the
- * header.
+ * 
+ * @param opName operation to be executed
+ * @param width instruction width (typically 32 or 64)
+ * @param inputs array of input values
+ * @param inputsCount number of values in the inputs array
+ * @return vector of SimValue objects.
  */
 std::vector<SimValue>
 executeInstructionHelper(
     const char* opName, uint8_t width, const uint64_t* inputs,
-    const int inputsCount) {
+    int inputsCount) {
     if (RISCVInstructionExecutor::pool == nullptr) {
         RISCVInstructionExecutor::pool = std::make_unique<OperationPool>();
     }
@@ -126,8 +131,8 @@ executeInstructionHelper(
 extern "C" {
 
 /**
- * Should be called before other functions. Initializes the Machine object and
- * loads the custom ops map.
+ * Initializes the Machine object and creates the custom_ops map and OperationPool object.
+ * Should be called before other functions. 
  *
  * @param machinePath path to the .adf machine file.
  * @param error error messages in case of failure. Can also be a nullptr if
@@ -172,7 +177,7 @@ initializeMachine(const char* machinePath, char** error) {
 
 /**
  * Resets the customOps map loaded with initializeMachine and deletes the
- * OperationPool.
+ * OperationPool instruction cache.
  */
 int
 resetMachine() {
@@ -183,7 +188,9 @@ resetMachine() {
 
 /**
  * Unpacks a RISC-V R4-type instruction and returns its string representation
- * if found from the machine file. Remember to call Initialize machine first.
+ * if found from the machine file. 
+ * 
+ * Remember to call Initialize machine first.
  *
  * @param opcode full RISC-V opcode. Register values are ignored.
  * @param output The char* representation of the opcode, if it is found. Must
@@ -193,7 +200,7 @@ resetMachine() {
  * @return 0 on success, -1 on failure.
  */
 int
-unpackInstruction(const uint32_t instruction, char** output, char** error) {
+unpackInstruction(uint32_t instruction, char** output, char** error) {
     if (RISCVInstructionExecutor::customOps.empty()) {
         *error = strdup(
             "UnpackInstruction error: customOps map is empty. Did you "
@@ -254,9 +261,10 @@ unpackInstruction(const uint32_t instruction, char** output, char** error) {
     return -1;
 }
 /**
- * Executes a custom instruction. The instruction behavior is by default
- * located in ~/.openasip/opset 32 refers to the operation width, as well
- * as input and output sizes.
+ * Executes a custom 32-wide instruction. 
+ * 
+ * The instruction behavior is searched automatically by OperationPool 
+ * from the OSAL search paths. See chapter 4.4 in the manual. 
  *
  * @param opName The operation name as it is in the machine file.
  * @param inputs Input value(s) of the operation. Can contain more values
@@ -270,7 +278,7 @@ unpackInstruction(const uint32_t instruction, char** output, char** error) {
  */
 int
 executeInstruction32(
-    const char* opName, const uint32_t* inputs, const uint32_t inputsCount,
+    const char* opName, const uint32_t* inputs, uint32_t inputsCount,
     uint32_t* output, char** error) {
     if (output == nullptr) {
         if (error != nullptr) {
@@ -302,9 +310,10 @@ executeInstruction32(
 }
 
 /**
- * Executes a custom instruction. The instruction behavior is by default
- * located in ~/.openasip/opset 64 refers to the operation width, as well
- * as input and output sizes.
+ * Executes a custom 64-wide instruction. 
+ * 
+ * The instruction behavior is searched automatically by OperationPool 
+ * from the OSAL search paths. See chapter 4.4 in the manual. 
  *
  * @param opName The operation name as it is in the machine file.
  * @param inputs Input value(s) of the operation. Can contain more values
@@ -318,7 +327,7 @@ executeInstruction32(
  */
 int
 executeInstruction64(
-    const char* opName, const uint64_t* inputs, const uint32_t inputsCount,
+    const char* opName, const uint64_t* inputs, uint32_t inputsCount,
     uint64_t* output, char** error) {
     if (output == nullptr) {
         if (error != nullptr) {

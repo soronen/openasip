@@ -36,14 +36,14 @@ int initializeMachine(const char* machinePath, char** error);
 int resetMachine();
 
 int unpackInstruction(
-    const uint32_t instruction, char** output, char** error);
+    uint32_t instruction, char** output, char** error);
 
 int executeInstruction32(
-    const char* opName, const uint32_t* inputs, const uint32_t inputsCount,
+    const char* opName, const uint32_t* inputs, uint32_t inputsCount,
     uint32_t* output, char** error);
 
 int executeInstruction64(
-    const char* opName, const uint64_t* inputs, const uint32_t inputsCount,
+    const char* opName, const uint64_t* inputs, uint32_t inputsCount,
     uint64_t* output, char** error);
 }
 

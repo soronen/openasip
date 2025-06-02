@@ -49,6 +49,7 @@ main(void) {
     u32_to_hex(fastcrc, buf);
     uart_puts(buf);
     uart_puts("\r\n");
-    while (1);
+    while (1)
+        ;
     return 0;
 }
